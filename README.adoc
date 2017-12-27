@@ -1,0 +1,9 @@
+= ml-project-template
+
+An template for ML projects striking a balance between reproducibility and rapid iteration
+
+Requirements:
+
+* python3.5
+* git
+
