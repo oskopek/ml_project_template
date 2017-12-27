@@ -2,6 +2,7 @@ from os import listdir
 from os.path import isdir, isfile, join
 import matplotlib.image as mpimg
 
+# TODO: Take a look at TF datasets
 
 class DataFile(object):
 

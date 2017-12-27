@@ -103,3 +103,7 @@ ENV/
 # pycharm
 .idea/
 *.iml
+
+# Data folders
+data_in/*
+data_out/*

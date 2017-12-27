@@ -21,20 +21,16 @@ import sys
 import time
 
 import tensorflow as tf
-
 import tensorflow.contrib.eager as tfe
 
 
 class BaseModel(tfe.Network):
     """Base Network."""
-    def __init__(self):
-        super(BaseModel, self).__init__(name='')
-
-    def call(self, inputs, training):
-        pass
+    def __init__(self, name=''):
+        super(BaseModel, self).__init__(name=name)
 
     def model_loss(self, labels, images):
-        predictions = model(images, training=True)
+        predictions = self.call(images, training=True)
 
         predictions = tf.argmax(predictions, axis=1, output_type=tf.int64)
         labels = tf.argmax(labels, axis=1, output_type=tf.int64)
@@ -55,10 +51,9 @@ class BaseModel(tfe.Network):
         tf.train.get_or_create_global_step()
 
         for batch, (images, labels) in enumerate(tfe.Iterator(dataset)):
-            with tf.contrib.summary.record_summaries_every_n_global_steps(100):
+            with tf.contrib.summary.record_summaries_every_n_global_steps(10):
                 batch_model_loss = functools.partial(self.model_loss, labels, images)
-                optimizer.minimize(
-                    batch_model_loss, global_step=tf.train.get_global_step())
+                optimizer.minimize(batch_model_loss, global_step=tf.train.get_global_step())
                 if log_interval and batch % log_interval == 0:
                     print('Batch #%d\tLoss: %.6f' % (batch, batch_model_loss()))
 
@@ -79,7 +74,3 @@ class BaseModel(tfe.Network):
         with tf.contrib.summary.always_record_summaries():
             tf.contrib.summary.scalar('loss', avg_loss.result())
             tf.contrib.summary.scalar('accuracy', accuracy.result())
-
-
-if __name__ == '__main__':
-    pass
