@@ -30,20 +30,21 @@ class BaseModel(tfe.Network):
         super(BaseModel, self).__init__(name=name)
 
     def model_loss(self, labels, images):
-        predictions = self.call(images, training=True)
+        output_layer = self.call(images, training=True)
 
-        predictions = tf.argmax(predictions, axis=1, output_type=tf.int64)
+        predictions = tf.argmax(output_layer, axis=1, output_type=tf.int64)
         labels = tf.argmax(labels, axis=1, output_type=tf.int64)
 
-        loss_value = self.loss(predictions, labels)
+        loss_value = self.loss(output_layer, labels)
         tf.contrib.summary.scalar('loss', loss_value)
+        # TODO: Enable more metrics.
         tf.contrib.summary.scalar('accuracy', tf.contrib.metrics.accuracy(predictions, labels))
-        tf.contrib.summary.scalar('precision', tf.contrib.metrics.precision(predictions, labels))
-        tf.contrib.summary.scalar('recall', tf.contrib.metrics.recall(predictions, labels))
+        #tf.contrib.summary.scalar('precision', tf.contrib.metrics.precision(predictions, labels))
+        #tf.contrib.summary.scalar('recall', tf.contrib.metrics.recall(predictions, labels))
         return loss_value
 
     def loss(self, predictions, labels):
-        return tf.losses.sparse_softmax_cross_entropy(logits=predictions, labels=labels)
+        return tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(logits=predictions, labels=labels))
 
     def train_one_epoch(self, optimizer, dataset, log_interval=None):
         """Trains model on `dataset` using `optimizer`."""
@@ -63,12 +64,12 @@ class BaseModel(tfe.Network):
         accuracy = tfe.metrics.Accuracy('accuracy')
 
         for images, labels in tfe.Iterator(dataset):
-            predictions = self.call(images, training=False)
-            predictions = tf.argmax(predictions, axis=1, output_type=tf.int64)
+            output_layer = self.call(images, training=False)
+            predictions = tf.argmax(output_layer, axis=1, output_type=tf.int64)
             labels = tf.argmax(labels, axis=1, output_type=tf.int64)
 
-            avg_loss(self.loss(predictions, labels))
-            accuracy = tf.contrib.metrics.accuracy(predictions, labels)
+            avg_loss(self.loss(output_layer, labels))
+            accuracy(predictions, labels)
         print('Test set: Average loss: %.4f, Accuracy: %4f%%\n' %
               (avg_loss.result(), 100 * accuracy.result()))
         with tf.contrib.summary.always_record_summaries():
