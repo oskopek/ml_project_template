@@ -2,8 +2,31 @@
 
 An template for ML projects striking a balance between reproducibility and rapid iteration
 
-Requirements:
+== Requirements and versions:
 
-* python3.5
-* git
+* Python 3.5
+* Git
+* Tensorflow 1.5
+
+**Important:** When commiting, remember to be *in* the virtual environment, for hooks to work.
+
+Note: Collab still runs on different versions of everything, but this should be a good approximation (2018/02/27).
+
+== Setup
+
+Make sure there is no `venv/` directory in your repo. If there is, remove it.
+Run the following commands:
+```
+./setup/create_venv.sh
+source venv/bin/activate
+./setup/setup_venv.sh
+```
+
+== Starting the notebook server
+
+Run: `jupyter notebook .` in the project root directory.
+
+=== Tensorboard
+
+To run Tensorboard in the notebook server, go to the specified log directory, and select New > Tensorboard. A pop-up window will open (make sure to enable those in your browser).
 
