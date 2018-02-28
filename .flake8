@@ -13,5 +13,4 @@ exclude =
     .ipynb_checkpoints,
     # virtual env
     venv
-max-complexity = 10
 max-line-length = 120

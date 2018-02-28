@@ -1,0 +1,23 @@
+image: tensorflow/tensorflow:1.5.0-py3
+
+before_script:
+  - apt-get update
+  - ./setup/create_venv.sh
+  - source venv/bin/activate
+  - ./setup/setup_venv.sh
+
+stages:
+  - build
+  - test
+
+build-job:
+  stage: clean
+  script:
+    - "./setup/clean.sh"
+
+test-job:
+  stage: test
+  dependencies:
+    - build-job
+  script:
+    - "./setup/tests.sh"
