@@ -7,4 +7,6 @@ then
     echo "Not in venv, please activate it first."
     exit 1
 fi
-flake8 .
+
+nbstripout models/*.ipynb notebooks/*.ipynb
+yapf -r -i features/ models/ notebooks/ resources/ setup/

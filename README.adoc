@@ -1,6 +1,6 @@
 = ml-project-template
 
-An template for ML projects striking a balance between reproducibility and rapid iteration
+A template for ML projects striking a balance between reproducibility and rapid iteration.
 
 == Requirements and versions:
 
@@ -8,7 +8,7 @@ An template for ML projects striking a balance between reproducibility and rapid
 * Git
 * Tensorflow 1.5
 
-**Important:** When commiting, remember to be *in* the virtual environment, for hooks to work.
+*Important:* When commiting, remember to be *in* the virtual environment, for hooks to work.
 
 Note: Collab still runs on different versions of everything, but this should be a good approximation (2018/02/27).
 
@@ -22,6 +22,8 @@ source venv/bin/activate
 ./setup/setup_venv.sh
 ```
 
+*Important:* For all commands here, we assume you are source into the virtual environment: `source venv/bin/activate`
+
 == Starting the notebook server
 
 Run: `jupyter notebook .` in the project root directory.
@@ -30,3 +32,41 @@ Run: `jupyter notebook .` in the project root directory.
 
 To run Tensorboard in the notebook server, go to the specified log directory, and select New > Tensorboard. A pop-up window will open (make sure to enable those in your browser).
 
+Hint: Only do this once, in the `data_out/` folder.
+
+If you are on Colab, add the following *TWO* cells to your notebook, ideally in a "section":
+
+```
+!git clone https://github.com/mixuala/colab_utils.git
+```
+
+```
+import os
+import colab_utils.tboard
+
+# set paths
+ROOT = %pwd
+LOG_DIR = os.path.join(ROOT, 'log')
+
+# will install `ngrok`, if necessary
+# will create `log_dir` if path does not exist
+colab_utils.tboard.launch_tensorboard(bin_dir=ROOT, log_dir=LOG_DIR)
+```
+
+A URL will be in the output, use that to connect to Tensorboard in your browser. The URL should only work from your machine (localhost).
+
+== Formatting
+
+Unfortunately, there is no sane way to autoformat notebooks. Please do that manually, in the notebook, using the code_prettify
+extensions (press Ctrl+Shift+L). All other Python files will get autoformatted by YAPF.
+
+== Directory structure
+
+* `data_in/` -- input data and associated scripts/configs
+* `data_out/` -- output data and logs + associated scripts/configs
+* `features/` -- feature preprocessing and normalization Python code + configs
+* `models/` -- notebooks/scripts defining the models + hyperparameters
+* `notebooks/` -- data exploration and other misc. notebooks
+* `resources/` -- Python utilities
+* `setup/` -- environemnt setup and verification scripts in Python/Bash
+* `venv/` -- the (local) Python virtual environemnt

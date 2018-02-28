@@ -17,8 +17,7 @@ def strip_consts(graph_def, max_const_size=32):
             tensor = n.attr['value'].tensor
             size = len(tensor.tensor_content)
             if size > max_const_size:
-                tensor.tensor_content = tf.compat.as_bytes(
-                    "<stripped %d bytes>" % size)
+                tensor.tensor_content = tf.compat.as_bytes("<stripped %d bytes>" % size)
     return strip_def
 
 
@@ -29,8 +28,7 @@ def rename_nodes(graph_def, rename_func):
         n.MergeFrom(n0)
         n.name = rename_func(n.name)
         for i, s in enumerate(n.input):
-            n.input[i] = rename_func(
-                s) if s[0] != '^' else '^' + rename_func(s[1:])
+            n.input[i] = rename_func(s) if s[0] != '^' else '^' + rename_func(s[1:])
     return res_def
 
 
@@ -51,7 +49,9 @@ def show_graph(graph_def, max_const_size=32):
         <div style="height:600px">
           <tf-graph-basic id="{id}"></tf-graph-basic>
         </div>
-    """.format(data=repr(str(strip_def)), id='graph' + str(np.random.rand()))
+    """.format(
+        data=repr(str(strip_def)), id='graph' + str(np.random.rand())
+    )
 
     iframe = """
         <iframe seamless style="width:800px;height:620px;border:0" srcdoc="{}">

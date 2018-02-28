@@ -1,6 +1,5 @@
 import tensorflow as tf
 import os
-import sys
 
 global FLAGS
 FLAGS = tf.app.flags.FLAGS
@@ -8,23 +7,24 @@ FLAGS = tf.app.flags.FLAGS
 
 def define_flags():
     # Directories
-    tf.app.flags.DEFINE_string('in_data_dir', 'data_in',
-                               "Directory from which to read input datasets.")
-    tf.app.flags.DEFINE_string('out_data_dir', 'data_out',
-                               """Directory where to write event logs """
-                               """and checkpoint.""")
+    tf.app.flags.DEFINE_string('in_data_dir', 'data_in', "Directory from which to read input datasets.")
+    tf.app.flags.DEFINE_string(
+        'out_data_dir', 'data_out', """Directory where to write event logs """
+        """and checkpoint."""
+    )
     if os.name == 'nt':
-        tf.app.flags.DEFINE_string('checkpoint_dir', 'e:/temp/tensorflow/checkpoints/',
-                                   'Directory to save checkpoints in (once per epoch)')
+        tf.app.flags.DEFINE_string(
+            'checkpoint_dir', 'e:/temp/tensorflow/checkpoints/', 'Directory to save checkpoints in (once per epoch)'
+        )
     else:
-        tf.app.flags.DEFINE_string('checkpoint_dir', '/tmp/tensorflow/checkpoints/',
-                                   'Directory to save checkpoints in (once per epoch)')
+        chkpt_dir = '/tmp/tensorflow/checkpoints/'
+        if not os.path.exists(chkpt_dir):
+            os.makedirs(chkpt_dir)
+        tf.app.flags.DEFINE_string('checkpoint_dir', chkpt_dir, 'Directory to save checkpoints in (once per epoch)')
 
     # TF parameters
-    tf.app.flags.DEFINE_boolean(
-        "no_gpu", False, 'Disables GPU usage even if a GPU is available')
-    tf.app.flags.DEFINE_integer(
-        "log_interval", 100, 'How many batches to wait before logging training statistics.')
+    tf.app.flags.DEFINE_boolean("no_gpu", False, 'Disables GPU usage even if a GPU is available')
+    tf.app.flags.DEFINE_integer("log_interval", 100, 'How many batches to wait before logging training statistics.')
 
     # Optimization parameters
     tf.app.flags.DEFINE_integer('epochs', 50, 'Training epoch count')
@@ -33,8 +33,7 @@ def define_flags():
     tf.app.flags.DEFINE_integer('batch_size', 100, 'Training batch size')
 
     # Model parameters
-    tf.app.flags.DEFINE_integer(
-        'conv_size', 32, 'First convolution layer size')
+    tf.app.flags.DEFINE_integer('conv_size', 32, 'First convolution layer size')
 
     # Jupyter notebook params
     # Only to avoid raising UnrecognizedFlagError

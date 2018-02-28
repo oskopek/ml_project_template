@@ -107,3 +107,6 @@ ENV/
 # Data folders
 data_in/*
 data_out/*
+
+# vscode
+.vscode/
