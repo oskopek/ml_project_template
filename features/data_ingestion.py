@@ -2,8 +2,8 @@ from os import listdir
 from os.path import isdir, isfile, join
 import matplotlib.image as mpimg
 
-# TODO: Take a look at TF datasets
 
+# TODO: Take a look at TF datasets
 class DataFile(object):
 
     SUFFIXES = ['jpg', 'png']
@@ -57,7 +57,6 @@ class DataFile(object):
 
 
 class DataSet(object):
-
     def __init__(self, base, file):
         self.train = DataFile(base, file + '_train.npz')
         self.test = DataFile(base, file + '_test.npz')
@@ -73,5 +72,6 @@ class DataSet(object):
     def is_loaded(self):
         # TODO
         pass
+
 
 # class DataSets() TODO: Just use a dict.

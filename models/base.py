@@ -14,11 +14,7 @@
 # ==============================================================================
 """A neural network classifier base."""
 
-import argparse
 import functools
-import os
-import sys
-import time
 
 import tensorflow as tf
 import tensorflow.contrib.eager as tfe
@@ -39,10 +35,9 @@ class BaseModel(tfe.Network):
         loss_value = self.loss(output_layer, labels)
         tf.contrib.summary.scalar('loss', loss_value)
         # TODO: Enable more metrics.
-        tf.contrib.summary.scalar(
-            'accuracy', tf.contrib.metrics.accuracy(predictions, labels))
-        #tf.contrib.summary.scalar('precision', tf.contrib.metrics.precision(predictions, labels))
-        #tf.contrib.summary.scalar('recall', tf.contrib.metrics.recall(predictions, labels))
+        tf.contrib.summary.scalar('accuracy', tf.contrib.metrics.accuracy(predictions, labels))
+        # tf.contrib.summary.scalar('precision', tf.contrib.metrics.precision(predictions, labels))
+        # tf.contrib.summary.scalar('recall', tf.contrib.metrics.recall(predictions, labels))
         return loss_value
 
     def loss(self, predictions, labels):
@@ -55,13 +50,10 @@ class BaseModel(tfe.Network):
 
         for batch, (images, labels) in enumerate(tfe.Iterator(dataset)):
             with tf.contrib.summary.record_summaries_every_n_global_steps(10):
-                batch_model_loss = functools.partial(
-                    self.model_loss, labels, images)
-                optimizer.minimize(
-                    batch_model_loss, global_step=tf.train.get_global_step())
+                batch_model_loss = functools.partial(self.model_loss, labels, images)
+                optimizer.minimize(batch_model_loss, global_step=tf.train.get_global_step())
                 if log_interval and batch % log_interval == 0:
-                    print('Batch #%d\tLoss: %.6f' %
-                          (batch, batch_model_loss()))
+                    print('Batch #%d\tLoss: %.6f' % (batch, batch_model_loss()))
 
     def test(self, dataset):
         """Perform an evaluation of `model` on the examples from `dataset`."""
@@ -75,8 +67,7 @@ class BaseModel(tfe.Network):
 
             avg_loss(self.loss(output_layer, labels))
             accuracy(predictions, labels)
-        print('Test set: Average loss: %.4f, Accuracy: %4f%%\n' %
-              (avg_loss.result(), 100 * accuracy.result()))
+        print('Test set: Average loss: %.4f, Accuracy: %4f%%\n' % (avg_loss.result(), 100 * accuracy.result()))
         with tf.contrib.summary.always_record_summaries():
             tf.contrib.summary.scalar('loss', avg_loss.result())
             tf.contrib.summary.scalar('accuracy', accuracy.result())
