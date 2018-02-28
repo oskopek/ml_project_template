@@ -1,0 +1,30 @@
+FROM tensorflow/tensorflow:1.5.0-py3
+
+LABEL maintainer="Ondrej Skopek <oskopek@oskopek.com>"
+
+RUN apt-get update
+
+# Set up our notebook config.
+COPY docker/jupyter_notebook_config.py /root/.jupyter/
+
+# Copy notebooks and the sources.
+COPY / /mammography
+
+# Jupyter has issues with being run directly:
+#   https://github.com/ipython/ipython/issues/7062
+# We just add a little wrapper script.
+# COPY docker/run_jupyter.sh / # Already copied and not needed TODO
+
+# TensorBoard
+EXPOSE 6006
+# IPython
+EXPOSE 8888
+
+WORKDIR "/mammography"
+
+# TODO
+ENTRYPOINT /bin/bash
+#CMD ["/run_jupyter.sh", "--allow-root"]
+CMD ["/mammography/docker/setup.sh"]
+
+# TODO: Add docker compose instead of bash scripts
