@@ -32,4 +32,4 @@ if [ "$arg" == 'notebook' ]; then
 fi
 
 # Run a specific configuration
-exec python docker/run_config.py $@ # Pass arg and all successive arguments
+exec python -m docker.run_config $@ # Pass arg and all successive arguments

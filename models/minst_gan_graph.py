@@ -4,8 +4,10 @@ import tensorflow.contrib.summary as tf_summary
 
 from models.base import BaseModel
 
-global FLAGS
-FLAGS = FLAGS  # noqa
+# Flags
+from flags import flags_parser
+FLAGS = flags_parser.FLAGS
+assert FLAGS is not None
 
 
 # Utils
@@ -99,48 +101,57 @@ class MnistGan(BaseModel):
         super(MnistGan, self).__init__(
             logdir=FLAGS.data.out_dir, expname="MNIST-GAN", threads=FLAGS.training.threads, seed=FLAGS.training.seed
         )
-        self.build()
+        with self.session.graph.as_default():
+            self._build()
+            self._init_variables()
 
     # Construct the graph
-    def build(self):
-        with self.session.graph.as_default():
-            self.images_input = tf.placeholder(tf.float32, shape=(None, self.IMAGE_PIXELS))
-            self.noise_input = tf.placeholder(tf.float32, shape=(None, self.NOISE_SIZE))
-            self.noise_input_interpolated = tf.placeholder(tf.float32, shape=(None, self.NOISE_SIZE))
+    def _build(self):
+        self.d_step = tf.Variable(0, dtype=tf.int64, trainable=False, name="d_step")
+        self.g_step = tf.Variable(0, dtype=tf.int64, trainable=False, name="g_step")
 
-            # Losses
-            g_sample = generator(self.noise_input)
-            d_real = discriminator(self.images_input, reuse=False)
-            d_fake = discriminator(g_sample, reuse=True)
+        self.images_input = tf.placeholder(tf.float32, shape=(None, self.IMAGE_PIXELS))
+        self.noise_input = tf.placeholder(tf.float32, shape=(None, self.NOISE_SIZE))
+        self.noise_input_interpolated = tf.placeholder(tf.float32, shape=(None, self.NOISE_SIZE))
 
-            d_loss_real = tf.reduce_mean(
-                tf.nn.sigmoid_cross_entropy_with_logits(logits=d_real, labels=tf.ones_like(d_real))
+        # Losses
+        g_sample = generator(self.noise_input)
+        d_real = discriminator(self.images_input, reuse=False)
+        d_fake = discriminator(g_sample, reuse=True)
+
+        d_loss_real = tf.reduce_mean(
+            tf.nn.sigmoid_cross_entropy_with_logits(logits=d_real, labels=tf.ones_like(d_real))
+        )
+        d_loss_fake = tf.reduce_mean(
+            tf.nn.sigmoid_cross_entropy_with_logits(logits=d_fake, labels=tf.zeros_like(d_fake))
+        )
+        self.d_loss = d_loss_real + d_loss_fake
+        self.g_loss = tf.reduce_mean(
+            tf.nn.sigmoid_cross_entropy_with_logits(logits=d_fake, labels=tf.ones_like(d_fake))
+        )
+
+        # Test summaries
+        tiled_image_random = tile_images(g_sample, 6, 6, 28, 28)
+        tiled_image_interpolated = tile_images(generator(self.noise_input_interpolated, reuse=True), 6, 6, 28, 28)
+        with self.summary_writer.as_default(), tf_summary.always_record_summaries():
+            gen_image_summary_op = tf_summary.image(
+                'generated_images', tiled_image_random, max_images=1, step=self.g_step
             )
-            d_loss_fake = tf.reduce_mean(
-                tf.nn.sigmoid_cross_entropy_with_logits(logits=d_fake, labels=tf.zeros_like(d_fake))
-            )
-            d_loss = d_loss_real + d_loss_fake
-            g_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=d_fake, labels=tf.ones_like(d_fake)))
-
-            # Summaries
-            tiled_image_random = tile_images(g_sample, 6, 6, 28, 28)
-            tiled_image_interpolated = tile_images(generator(self.noise_input_interpolated, reuse=True), 6, 6, 28, 28)
-            gen_image_summary_op = tf_summary.image('generated_images', tiled_image_random, max_outputs=1)
             gen_image_summary_interpolated_op = tf_summary.image(
-                'generated_images_interpolated', tiled_image_interpolated, max_outputs=1
+                'generated_images_interpolated', tiled_image_interpolated, max_images=1, step=self.g_step
             )
             self.IMAGE_SUMMARIES = [gen_image_summary_op, gen_image_summary_interpolated_op]
 
-            # Optimizers
-            t_vars = tf.trainable_variables()
-            self.d_opt = tf.train.AdamOptimizer(2e-4).minimize(
-                d_loss, var_list=[var for var in t_vars if 'Discriminator' in var.name]
-            )
-            self.g_opt = tf.train.AdamOptimizer(2e-4).minimize(
-                g_loss, var_list=[var for var in t_vars if 'Generator' in var.name]
-            )
+        # Optimizers
+        t_vars = tf.trainable_variables()
+        self.d_opt = tf.train.AdamOptimizer(2e-4).minimize(
+            self.d_loss, var_list=[var for var in t_vars if 'Discriminator' in var.name], global_step=self.d_step
+        )
+        self.g_opt = tf.train.AdamOptimizer(2e-4).minimize(
+            self.g_loss, var_list=[var for var in t_vars if 'Generator' in var.name], global_step=self.g_step
+        )
 
-            # saver = tf.train.Saver(max_to_keep=1)
+        # saver = tf.train.Saver(max_to_keep=1)
 
     def load_data(self):
         # Read the input data
@@ -184,7 +195,7 @@ class MnistGan(BaseModel):
 
     # Generate images from test noise
     def test_eval(self, epoch_info, test_noise_random, test_noise_interpolated):
-        gen_image_ops = self.session.run(
+        self.session.run(
             self.IMAGE_SUMMARIES,
             feed_dict={
                 self.noise_input: test_noise_random,
@@ -192,11 +203,6 @@ class MnistGan(BaseModel):
             }
         )
 
-        for image_op in gen_image_ops:
-            # TODO(jendelel): Why do we need this weird calculation here?
-            self.summary_writer.add_summary(image_op, global_step=epoch_info[0] * 1000 + epoch_info[1])
-
-    # TODO(oskopek): should be a bit more modularized
     def run(self):
         BATCH_SIZE = FLAGS.model.optimization.batch_size
         train_X, train_Y = self.load_data()

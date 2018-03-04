@@ -22,13 +22,11 @@ class BaseModel:
 
             timestamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
             logdir = "{}/{}-{}".format(logdir, expname, timestamp)
-            self.summary_writer = tf_summary.create_file_writer(
-                "{}/{}".format(logdir, expname), flush_millis=5_000, graph=self.session.graph
-            )
+            self.summary_writer = tf_summary.create_file_writer(logdir, flush_millis=5_000)
 
-    def init_variables(self):
+    def _init_variables(self):
         # Initialize variables
-        self.session.run(tf.global_variables_initializer().run())
+        self.session.run(tf.global_variables_initializer())
         with self.summary_writer.as_default():
             tf_summary.initialize(session=self.session, graph=self.session.graph)
 
