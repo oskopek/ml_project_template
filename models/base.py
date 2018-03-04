@@ -22,7 +22,7 @@ class BaseModel:
 
             timestamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
             logdir = "{}/{}-{}".format(logdir, expname, timestamp)
-            self.summary_writer = tf_summary.create_file_writer(logdir, flush_millis=5_000)
+            self.summary_writer = tf_summary.create_file_writer(logdir, flush_millis=5 * 1000)
 
     def _init_variables(self):
         # Initialize variables
