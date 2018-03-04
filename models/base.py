@@ -1,73 +1,37 @@
-# Copyright 2017 The TensorFlow Authors. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-# ==============================================================================
-"""A neural network classifier base."""
-
-import functools
-
 import tensorflow as tf
-import tensorflow.contrib.eager as tfe
+import tensorflow.contrib.summary as tf_summary
+
+from datetime import datetime
 
 
-class BaseModel(tfe.Network):
-    """Base Network."""
+# Make sure to implement the run() function in the model file!
+class BaseModel:
+    def __init__(self, logdir="logs", expname="exp", threads=1, seed=42):
+        # Create an empty graph and a session
+        graph = tf.Graph()
+        graph.seed = seed
+        self.session = tf.Session(
+            graph=graph,
+            config=tf.ConfigProto(inter_op_parallelism_threads=threads, intra_op_parallelism_threads=threads)
+        )
 
-    def __init__(self, name=''):
-        super(BaseModel, self).__init__(name=name)
+        # Construct the graph
+        with self.session.graph.as_default():
+            self.global_step = tf.Variable(0, dtype=tf.int64, trainable=False, name="global_step")
+            self.is_training = tf.placeholder_with_default(False, [])
 
-    def model_loss(self, labels, images):
-        output_layer = self.call(images, training=True)
+            timestamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
+            logdir = "{}/{}-{}".format(logdir, expname, timestamp)
+            self.summary_writer = tf_summary.create_file_writer(
+                "{}/{}".format(logdir, expname), flush_millis=5_000, graph=self.session.graph
+            )
 
-        predictions = tf.argmax(output_layer, axis=1, output_type=tf.int64)
-        labels = tf.argmax(labels, axis=1, output_type=tf.int64)
+    def init_variables(self):
+        # Initialize variables
+        self.session.run(tf.global_variables_initializer().run())
+        with self.summary_writer.as_default():
+            tf_summary.initialize(session=self.session, graph=self.session.graph)
 
-        loss_value = self.loss(output_layer, labels)
-        tf.contrib.summary.scalar('loss', loss_value)
-        # TODO: Enable more metrics.
-        tf.contrib.summary.scalar('accuracy', tf.contrib.metrics.accuracy(predictions, labels))
-        # tf.contrib.summary.scalar('precision', tf.contrib.metrics.precision(predictions, labels))
-        # tf.contrib.summary.scalar('recall', tf.contrib.metrics.recall(predictions, labels))
-        return loss_value
-
-    def loss(self, predictions, labels):
-        return tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(logits=predictions, labels=labels))
-
-    def train_one_epoch(self, optimizer, dataset, log_interval=None):
-        """Trains model on `dataset` using `optimizer`."""
-
-        tf.train.get_or_create_global_step()
-
-        for batch, (images, labels) in enumerate(tfe.Iterator(dataset)):
-            with tf.contrib.summary.record_summaries_every_n_global_steps(10):
-                batch_model_loss = functools.partial(self.model_loss, labels, images)
-                optimizer.minimize(batch_model_loss, global_step=tf.train.get_global_step())
-                if log_interval and batch % log_interval == 0:
-                    print('Batch #%d\tLoss: %.6f' % (batch, batch_model_loss()))
-
-    def test(self, dataset):
-        """Perform an evaluation of `model` on the examples from `dataset`."""
-        avg_loss = tfe.metrics.Mean('loss')
-        accuracy = tfe.metrics.Accuracy('accuracy')
-
-        for images, labels in tfe.Iterator(dataset):
-            output_layer = self.call(images, training=False)
-            predictions = tf.argmax(output_layer, axis=1, output_type=tf.int64)
-            labels = tf.argmax(labels, axis=1, output_type=tf.int64)
-
-            avg_loss(self.loss(output_layer, labels))
-            accuracy(predictions, labels)
-        print('Test set: Average loss: %.4f, Accuracy: %4f%%\n' % (avg_loss.result(), 100 * accuracy.result()))
-        with tf.contrib.summary.always_record_summaries():
-            tf.contrib.summary.scalar('loss', avg_loss.result())
-            tf.contrib.summary.scalar('accuracy', accuracy.result())
+    @property
+    def training_step(self):
+        return self.session.run(self.global_step)

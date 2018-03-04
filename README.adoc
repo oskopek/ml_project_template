@@ -70,3 +70,13 @@ extensions (press Ctrl+Shift+L). All other Python files will get autoformatted b
 * `resources/` -- Python utilities
 * `setup/` -- environemnt setup and verification scripts in Python/Bash
 * `venv/` -- the (local) Python virtual environemnt
+
+== Running
+
+Try it out:
+```
+docker run IMG bash # opens a shell
+docker run IMG jupyter # runs Jupyter
+docker run IMG notebook notebooks/test.ipynb # Runs the notebook
+docker run IMG models/mnist_gan_graph.py flags/gan.json # Runs the mnist gan graph model with flags from the specified file
+```
