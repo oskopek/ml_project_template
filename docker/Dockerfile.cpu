@@ -7,16 +7,15 @@ COPY docker/jupyter_notebook_config.py /root/.jupyter/
 
 # Copy the repo.
 COPY / /ml
+WORKDIR "/ml"
 
 # Update and create data_out
-RUN apt-get update && mkdir /ml/data_out
+RUN apt-get update && mkdir data_out && ./setup/create_venv.sh
 
 # TensorBoard
 EXPOSE 6006
 # IPython
 EXPOSE 8888
-
-WORKDIR "/ml"
 
 ENTRYPOINT ["./docker/run.sh"]
 CMD []
