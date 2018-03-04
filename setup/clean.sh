@@ -9,4 +9,4 @@ then
 fi
 
 nbstripout models/*.ipynb notebooks/*.ipynb
-yapf -r -i features/ models/ notebooks/ resources/ setup/
+yapf -r -i features/ models/ notebooks/ resources/ setup/ -e resources/colab_utils/
