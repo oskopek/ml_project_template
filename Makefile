@@ -1,4 +1,4 @@
-NAME      := registry.gitlab.com/breast-cancer-eth/mammography
+NAME      := registry.gitlab.com/oskopek/ml
 TAG       := $$(git log -1 --pretty=%h)
 CPUIMG    := ${NAME}/cpu:${TAG}
 GPUIMG    := ${NAME}/gpu:${TAG}
