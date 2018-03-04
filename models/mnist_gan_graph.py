@@ -213,7 +213,7 @@ class MnistGan(BaseModel):
 
         # Iterate through epochs
         for epoch in range(FLAGS.model.optimization.epochs):
-            print("Epoch %d" % epoch)
+            print("Epoch %d" % epoch, flush=True)
             for n_batch, batch in enumerate(next_batch(train_X, BATCH_SIZE)):
                 d_error, g_error = self.train_batch(batch)
 
@@ -221,7 +221,10 @@ class MnistGan(BaseModel):
                 if n_batch % 500 == 0:
                     # display.clear_output(True)
                     self.test_eval((epoch, n_batch), test_noise_random, test_noise_interpolated)
-                    print("Epoch: {}, Batch: {}, D_Loss: {}, G_Loss: {}".format(epoch, n_batch, d_error, g_error))
+                    print(
+                        "Epoch: {}, Batch: {}, D_Loss: {}, G_Loss: {}".format(epoch, n_batch, d_error, g_error),
+                        flush=True
+                    )
 
 
 # Runner method
