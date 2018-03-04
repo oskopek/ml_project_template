@@ -12,5 +12,6 @@ exclude =
     *.egg,
     .ipynb_checkpoints,
     # virtual env
-    venv
+    venv,
+    resources/colab_utils
 max-line-length = 120
