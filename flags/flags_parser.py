@@ -2,6 +2,8 @@ import json
 import re
 from dotmap import DotMap
 
+FLAGS = None
+
 
 def parse(file_name, remainder):
     lines = None
@@ -14,4 +16,5 @@ def parse(file_name, remainder):
 
     # TODO: Incorporate the remainder (arg overrides)
 
-    return DotMap(data)
+    global FLAGS
+    FLAGS = DotMap(data)

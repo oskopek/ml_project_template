@@ -8,5 +8,5 @@ then
     exit 1
 fi
 
-nbstripout models/*.ipynb notebooks/*.ipynb
+nbstripout notebooks/*.ipynb
 yapf -r -i features/ models/ notebooks/ resources/ setup/ -e resources/colab_utils/
