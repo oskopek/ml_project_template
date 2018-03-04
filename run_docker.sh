@@ -9,6 +9,6 @@ if [ -z $pass ]; then
 fi
 
 # TODO: Run docker without sudo
-cmd="sudo docker run bceth/mammography -d -e PASSWORD=$pass -p 8888:8888 -p 6006:6006"
+cmd="sudo docker run registry.gitlab.com/oskopek/ml/cpu -d -e PASSWORD=$pass -p 8888:8888 -p 6006:6006"
 echo "Running: $cmd"
 eval "$cmd"
