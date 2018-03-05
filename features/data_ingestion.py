@@ -57,6 +57,7 @@ class DataFile(object):
 
 
 class DataSet(object):
+
     def __init__(self, base, file):
         self.train = DataFile(base, file + '_train.npz')
         self.test = DataFile(base, file + '_test.npz')
