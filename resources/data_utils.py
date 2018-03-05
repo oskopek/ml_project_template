@@ -15,7 +15,7 @@ def shuffle(a, b):
     return a[permutation], b[permutation]
 
 
-def read_mnist():
+def read_mnist(in_dir, no_gpu=False):
     # In this case, MNIST + batch and shuffle it. In our case, it will be quite different.
 
     from tensorflow.examples.tutorials.mnist import input_data
@@ -23,18 +23,16 @@ def read_mnist():
     def read_data_sets(data_dir):
         """Returns training and test tf.data.Dataset objects."""
         data = input_data.read_data_sets(data_dir, one_hot=True)
-        # train_ds = tf.data.Dataset.from_tensor_slices((data.train.images,
-        #                                               data.train.labels))
-        # test_ds = tf.data.Dataset.from_tensors(
-        #   (data.test.images, data.test.labels))
+        # train_ds = tf.data.Dataset.from_tensor_slices((data.train.images, data.train.labels))
+        # test_ds = tf.data.Dataset.from_tensors((data.test.images, data.test.labels))
         return (data.train, data.test)
 
     device, data_format = ('/gpu:0', 'channels_first')
-    if FLAGS.training.no_gpu:
+    if no_gpu:
         device, data_format = ('/cpu:0', 'channels_last')
     print('Using device %s, and data format %s.' % (device, data_format))
 
     # Load the datasets
-    train_ds, test_ds = read_data_sets(FLAGS.data.in_dir)
-    # train_ds = train_ds.shuffle(60000).batch(FLAGS.batch_size)
+    train_ds, test_ds = read_data_sets(in_dir)
+    # train_ds = train_ds.shuffle(60000).batch(batch_size)
     return shuffle(train_ds.images, train_ds.labels)

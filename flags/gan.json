@@ -1,25 +1,23 @@
 {
     "data": {
-        // TODO: input data/dev data/test data specification.
         "in_dir": "data_in", // Input data directory.
         "out_dir": "data_out" // Directory where to write event logs and checkpoint. Will create a $MODEL_RUN directory in it.
     },
     "training": {
         "checkpoint_dir": "checkpoints", // Directory in data/out_dir/$MODEL_RUN where to write checkpoints.
         "no_gpu": false, // Disables GPU usage even if a GPU is available
-        "log_interval": 100, // How many steps to wait before logging training statistics.
+        "log_interval": 500, // How many steps to wait before logging training statistics.
         "threads": 8, // How many CPU threads should training use (max)
         "seed": 42 // Random seed
     },
     "model": {
-        "arch": {
-            "conv_size": 32 // First convolutional layer size
-        },
         "optimization": {
             "epochs": 200, // Training epoch count
-            "learning_rate": 0.0002, // Learning rate
-            "momentum": 0.5, // SGD momentum
+            "learning_rate": 2e-4, // Learning rate
             "batch_size": 100 // Training batch size
         }
+    },
+    "eval": {
+        "num_test_samples": 36 // Number of samples to generate at test time
     }
 }

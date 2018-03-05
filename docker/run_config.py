@@ -13,7 +13,7 @@ def main():
 
     args = parser.parse_args()
 
-    flags_parser.parse(args.flags_file, args.remainder)
+    flags_parser.parse(args.flags_file, remainder=args.remainder)
 
     model = importlib.import_module(args.model_file)
     model.run()
