@@ -1,0 +1,23 @@
+{
+    "data": {
+        "in_dir": "data_in", // Input data directory.
+        "out_dir": "data_out" // Directory where to write event logs and checkpoint. Will create a $MODEL_RUN directory in it.
+    },
+    "training": {
+        "checkpoint_dir": "checkpoints", // Directory in data/out_dir/$MODEL_RUN where to write checkpoints.
+        "no_gpu": false, // Disables GPU usage even if a GPU is available
+        "log_interval": 500, // How many steps to wait before logging training statistics.
+        "threads": 8, // How many CPU threads should training use (max)
+        "seed": 42 // Random seed
+    },
+    "model": {
+        "arch": {
+            "num_classes": 10
+        },
+        "optimization": {
+            "epochs": 12, // Training epoch count
+            "learning_rate": 3e-4, // Learning rate
+            "batch_size": 128 // Training batch size
+        }
+    }
+}

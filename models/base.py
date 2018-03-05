@@ -1,7 +1,21 @@
+from datetime import datetime
+
+import keras
+from keras import backend as K
+
+import numpy as np
+
 import tensorflow as tf
 import tensorflow.contrib.summary as tf_summary
 
-from datetime import datetime
+
+def set_seeds(seed=42, graph=None):
+    import os
+    np.random.seed(seed=seed)
+    tf.set_random_seed(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    if graph is not None:
+        graph.seed = seed
 
 
 # Make sure to implement the run() function in the model file!
@@ -10,7 +24,7 @@ class BaseModel:
     def __init__(self, logdir="logs", expname="exp", threads=1, seed=42):
         # Create an empty graph and a session
         graph = tf.Graph()
-        graph.seed = seed
+        set_seeds(seed=seed, graph=graph)
         self.session = tf.Session(
             graph=graph,
             config=tf.ConfigProto(inter_op_parallelism_threads=threads, intra_op_parallelism_threads=threads))
@@ -33,3 +47,19 @@ class BaseModel:
     @property
     def training_step(self):
         return self.session.run(self.global_step)
+
+
+class KerasModel(object):
+
+    callbacks = []
+
+    def __init__(self, logdir="logs", expname="exp", threads=1, seed=42):
+        set_seeds(seed=seed)
+        session = tf.Session(
+            config=tf.ConfigProto(inter_op_parallelism_threads=threads, intra_op_parallelism_threads=threads))
+        K.set_session(session)
+
+        timestamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
+        logdir = "{}/{}-{}".format(logdir, expname, timestamp)
+        tensorboard = keras.callbacks.TensorBoard(log_dir=logdir, histogram_freq=1, write_graph=True, write_images=True)
+        self.callbacks.append(tensorboard)
