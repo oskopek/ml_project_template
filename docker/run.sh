@@ -4,7 +4,7 @@ set -e
 
 # Replace docker args with the script args
 args="$(echo $@ | sed 's/^.*-- //')"
-echo "Args: $args"
+echo "Args: $args" >&2
 set -- $args
 
 arg="$1"

@@ -7,11 +7,11 @@ before_script:
   - source venv/bin/activate
 
 stages:
-  - build
+  - clean
   - test
   - container
 
-build-job:
+clean-job:
   stage: clean
   script:
     - "./setup/clean.sh"

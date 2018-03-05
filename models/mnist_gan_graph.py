@@ -24,6 +24,7 @@ def noise(size, dist='uniform'):
     elif dist == 'normal':
         return np.random.normal(size=size)
     elif dist == 'linspace':
+        # TODO(jendelel): Find a better to do this. Perhaps interpolate the "diagonal".
         n, dim = np.sqrt(size[0]).astype(np.int32), size[1]
         interpolated_noise = []
         starts, ends = noise((n, dim)), noise((n, dim))
@@ -42,6 +43,7 @@ def shuffle(a, b):
 
 def tile_images(images, num_x, num_y, h, w):
     res = tf.zeros((num_y * h, num_x * w))
+    # TODO(jendelel): Use index = i*num_y+j instead of incrementing index.
     index = -1
     rows = []
     for i in range(0, num_y):
