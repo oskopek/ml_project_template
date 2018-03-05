@@ -6,14 +6,14 @@ from datetime import datetime
 
 # Make sure to implement the run() function in the model file!
 class BaseModel:
+
     def __init__(self, logdir="logs", expname="exp", threads=1, seed=42):
         # Create an empty graph and a session
         graph = tf.Graph()
         graph.seed = seed
         self.session = tf.Session(
             graph=graph,
-            config=tf.ConfigProto(inter_op_parallelism_threads=threads, intra_op_parallelism_threads=threads)
-        )
+            config=tf.ConfigProto(inter_op_parallelism_threads=threads, intra_op_parallelism_threads=threads))
 
         # Construct the graph
         with self.session.graph.as_default():

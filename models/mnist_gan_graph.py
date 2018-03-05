@@ -1,60 +1,14 @@
-import numpy as np
 import tensorflow as tf
 import tensorflow.contrib.summary as tf_summary
 
 from models.base import BaseModel
+from resources.data_utils import next_batch, read_mnist
+from resource.model_utils import noise, tile_images
 
 # Flags
 from flags import flags_parser
 FLAGS = flags_parser.FLAGS
 assert FLAGS is not None
-
-
-# Utils
-def next_batch(arr, batch_size):
-    num_batches = int(len(arr) / batch_size)
-    for i in range(0, num_batches * batch_size, batch_size):
-        yield arr[i:i + batch_size]
-    yield arr[num_batches * batch_size:]
-
-
-def noise(size, dist='uniform'):
-    if dist == 'uniform':
-        return np.random.uniform(-1, 1, size=size)
-    elif dist == 'normal':
-        return np.random.normal(size=size)
-    elif dist == 'linspace':
-        # TODO(jendelel): Find a better to do this. Perhaps interpolate the "diagonal".
-        n, dim = np.sqrt(size[0]).astype(np.int32), size[1]
-        interpolated_noise = []
-        starts, ends = noise((n, dim)), noise((n, dim))
-        for i in range(n):
-            for w in np.linspace(0, 1, n):
-                interpolated_noise.append(starts[i] + (ends[i] + starts[i]) * w)
-        return np.asarray(interpolated_noise)
-
-
-def shuffle(a, b):
-    # Generate the permutation index array.
-    permutation = np.random.permutation(a.shape[0])
-    # Shuffle the arrays by giving the permutation in the square brackets.
-    return a[permutation], b[permutation]
-
-
-def tile_images(images, num_x, num_y, h, w):
-    res = tf.zeros((num_y * h, num_x * w))
-    # TODO(jendelel): Use index = i*num_y+j instead of incrementing index.
-    index = -1
-    rows = []
-    for i in range(0, num_y):
-        row = []
-        for j in range(0, num_x):
-            index += 1
-            row.append(tf.reshape(images[index], (h, w)))
-        rows.append(tf.concat(row, 1))
-    res = tf.concat(rows, 0)
-    print("res shape:", res.shape)
-    return tf.reshape(res, (1, num_y * h, num_x * w, 1))
 
 
 # Discriminator
@@ -66,16 +20,14 @@ def discriminator(X, reuse):
             units=1024,
             kernel_initializer=tf.random_normal_initializer(stddev=0.02),
             activation=tf.nn.relu,
-            name='fc1'
-        )
+            name='fc1')
         # Layer 2
         # dx = tf.layers.dense(dx, units=512, activation=tf.nn.relu, name='fc2')
         # Layer 3
         # dx = tf.layers.dense(dx, units=256, activation=tf.nn.relu, name='fc3')
         # Layer 4
         d_out = tf.layers.dense(
-            dx, units=1, kernel_initializer=tf.random_normal_initializer(stddev=0.02), name='fc_out'
-        )
+            dx, units=1, kernel_initializer=tf.random_normal_initializer(stddev=0.02), name='fc_out')
         return d_out
 
 
@@ -93,6 +45,11 @@ def generator(X, reuse=False):
         return g_out
 
 
+# Shortcut for cross-entropy loss calculation.
+def cross_entropy_loss(logits=None, labels=None):
+    return tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=logits, labels=labels))
+
+
 # Model
 class MnistGan(BaseModel):
     # Setup constants
@@ -101,8 +58,7 @@ class MnistGan(BaseModel):
 
     def __init__(self):
         super(MnistGan, self).__init__(
-            logdir=FLAGS.data.out_dir, expname="MNIST-GAN", threads=FLAGS.training.threads, seed=FLAGS.training.seed
-        )
+            logdir=FLAGS.data.out_dir, expname="MNIST-GAN", threads=FLAGS.training.threads, seed=FLAGS.training.seed)
         with self.session.graph.as_default():
             self._build()
             self._init_variables()
@@ -121,64 +77,34 @@ class MnistGan(BaseModel):
         d_real = discriminator(self.images_input, reuse=False)
         d_fake = discriminator(g_sample, reuse=True)
 
-        d_loss_real = tf.reduce_mean(
-            tf.nn.sigmoid_cross_entropy_with_logits(logits=d_real, labels=tf.ones_like(d_real))
-        )
-        d_loss_fake = tf.reduce_mean(
-            tf.nn.sigmoid_cross_entropy_with_logits(logits=d_fake, labels=tf.zeros_like(d_fake))
-        )
+        d_loss_real = cross_entropy_loss(logits=d_real, labels=tf.ones_like(d_real))
+        d_loss_fake = cross_entropy_loss(logits=d_fake, labels=tf.zeros_like(d_fake))
         self.d_loss = d_loss_real + d_loss_fake
-        self.g_loss = tf.reduce_mean(
-            tf.nn.sigmoid_cross_entropy_with_logits(logits=d_fake, labels=tf.ones_like(d_fake))
-        )
+        self.g_loss = cross_entropy_loss(logits=d_fake, labels=tf.ones_like(d_fake))
 
         # Test summaries
         tiled_image_random = tile_images(g_sample, 6, 6, 28, 28)
         tiled_image_interpolated = tile_images(generator(self.noise_input_interpolated, reuse=True), 6, 6, 28, 28)
         with self.summary_writer.as_default(), tf_summary.always_record_summaries():
             gen_image_summary_op = tf_summary.image(
-                'generated_images', tiled_image_random, max_images=1, step=self.g_step
-            )
+                'generated_images', tiled_image_random, max_images=1, step=self.g_step)
             gen_image_summary_interpolated_op = tf_summary.image(
-                'generated_images_interpolated', tiled_image_interpolated, max_images=1, step=self.g_step
-            )
+                'generated_images_interpolated', tiled_image_interpolated, max_images=1, step=self.g_step)
             self.IMAGE_SUMMARIES = [gen_image_summary_op, gen_image_summary_interpolated_op]
 
         # Optimizers
         t_vars = tf.trainable_variables()
-        self.d_opt = tf.train.AdamOptimizer(2e-4).minimize(
-            self.d_loss, var_list=[var for var in t_vars if 'Discriminator' in var.name], global_step=self.d_step
-        )
-        self.g_opt = tf.train.AdamOptimizer(2e-4).minimize(
-            self.g_loss, var_list=[var for var in t_vars if 'Generator' in var.name], global_step=self.g_step
-        )
+        LEARNING_RATE = FLAGS.training.model.optimization.learning_rate
+        self.d_opt = tf.train.AdamOptimizer(LEARNING_RATE).minimize(
+            self.d_loss, var_list=[var for var in t_vars if 'Discriminator' in var.name], global_step=self.d_step)
+        self.g_opt = tf.train.AdamOptimizer(LEARNING_RATE).minimize(
+            self.g_loss, var_list=[var for var in t_vars if 'Generator' in var.name], global_step=self.g_step)
 
-        # saver = tf.train.Saver(max_to_keep=1)
+        # saver = tf.train.Saver(max_to_keep=1) # TODO(jendelel): Set up saver.
 
     def load_data(self):
         # Read the input data
-        # In this case, MNIST + batch and shuffle it. In our case, it will be quite different.
-
-        from tensorflow.examples.tutorials.mnist import input_data
-
-        def read_data_sets(data_dir):
-            """Returns training and test tf.data.Dataset objects."""
-            data = input_data.read_data_sets(data_dir, one_hot=True)
-            # train_ds = tf.data.Dataset.from_tensor_slices((data.train.images,
-            #                                               data.train.labels))
-            # test_ds = tf.data.Dataset.from_tensors(
-            #   (data.test.images, data.test.labels))
-            return (data.train, data.test)
-
-        device, data_format = ('/gpu:0', 'channels_first')
-        if FLAGS.training.no_gpu:
-            device, data_format = ('/cpu:0', 'channels_last')
-        print('Using device %s, and data format %s.' % (device, data_format))
-
-        # Load the datasets
-        train_ds, test_ds = read_data_sets(FLAGS.data.in_dir)
-        # train_ds = train_ds.shuffle(60000).batch(FLAGS.batch_size)
-        return shuffle(train_ds.images, train_ds.labels)
+        return read_mnist()
 
     def train_batch(self, batch):
         BATCH_SIZE = FLAGS.model.optimization.batch_size
@@ -202,8 +128,7 @@ class MnistGan(BaseModel):
             feed_dict={
                 self.noise_input: test_noise_random,
                 self.noise_input_interpolated: test_noise_interpolated
-            }
-        )
+            })
 
     def run(self):
         BATCH_SIZE = FLAGS.model.optimization.batch_size
@@ -225,8 +150,7 @@ class MnistGan(BaseModel):
                     self.test_eval((epoch, n_batch), test_noise_random, test_noise_interpolated)
                     print(
                         "Epoch: {}, Batch: {}, D_Loss: {}, G_Loss: {}".format(epoch, n_batch, d_error, g_error),
-                        flush=True
-                    )
+                        flush=True)
 
 
 # Runner method
