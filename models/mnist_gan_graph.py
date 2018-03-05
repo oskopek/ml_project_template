@@ -53,7 +53,8 @@ def cross_entropy_loss(logits=None, labels=None):
 # Model
 class MnistGan(BaseModel):
     # Setup constants
-    IMAGE_PIXELS = 784
+    IMAGE_SIZE = 28
+    IMAGE_PIXELS = IMAGE_SIZE * IMAGE_SIZE
     NOISE_SIZE = 100
 
     def __init__(self):
@@ -83,8 +84,9 @@ class MnistGan(BaseModel):
         self.g_loss = cross_entropy_loss(logits=d_fake, labels=tf.ones_like(d_fake))
 
         # Test summaries
-        tiled_image_random = tile_images(g_sample, 6, 6, 28, 28)
-        tiled_image_interpolated = tile_images(generator(self.noise_input_interpolated, reuse=True), 6, 6, 28, 28)
+        tiled_image_random = tile_images(g_sample, 6, 6, self.IMAGE_SIZE, self.IMAGE_SIZE)
+        tiled_image_interpolated = tile_images(
+            generator(self.noise_input_interpolated, reuse=True), 6, 6, self.IMAGE_SIZE, self.IMAGE_SIZE)
         with self.summary_writer.as_default(), tf_summary.always_record_summaries():
             gen_image_summary_op = tf_summary.image(
                 'generated_images', tiled_image_random, max_images=1, step=self.g_step)
@@ -102,15 +104,10 @@ class MnistGan(BaseModel):
 
         # saver = tf.train.Saver(max_to_keep=1) # TODO(jendelel): Set up saver.
 
-    def load_data(self):
-        # Read the input data
-        return read_mnist()
-
     def train_batch(self, batch):
         BATCH_SIZE = FLAGS.model.optimization.batch_size
 
         # 1. Train Discriminator
-        # X_batch = images_to_vectors(batch.permute(0, 2, 3, 1).numpy())
         batch_noise = noise((BATCH_SIZE, self.NOISE_SIZE))
         feed_dict = {self.images_input: batch, self.noise_input: batch_noise}
         d_error, _ = self.session.run([self.d_loss, self.d_opt], feed_dict=feed_dict)
@@ -122,21 +119,20 @@ class MnistGan(BaseModel):
         return d_error, g_error
 
     # Generate images from test noise
-    def test_eval(self, epoch_info, test_noise_random, test_noise_interpolated):
+    def test_eval(self, noise_input, noise_input_interpolated):
         self.session.run(
             self.IMAGE_SUMMARIES,
             feed_dict={
-                self.noise_input: test_noise_random,
-                self.noise_input_interpolated: test_noise_interpolated
+                self.noise_input: noise_input,
+                self.noise_input_interpolated: noise_input_interpolated
             })
 
     def run(self):
         BATCH_SIZE = FLAGS.model.optimization.batch_size
-        train_X, train_Y = self.load_data()
+        train_X, train_Y = read_mnist(FLAGS.data.in_dir, no_gpu=FLAGS.training.no_gpu)
 
-        num_test_samples = 36
-        test_noise_random = noise((num_test_samples, self.NOISE_SIZE))
-        test_noise_interpolated = noise((num_test_samples, self.NOISE_SIZE), dist='linspace')
+        test_noise_random = noise(size=(FLAGS.eva.num_test_samples, self.NOISE_SIZE), dist='uniform')
+        test_noise_interpolated = noise(size=(FLAGS.eva.num_test_samples, self.NOISE_SIZE), dist='linspace')
 
         # Iterate through epochs
         for epoch in range(FLAGS.model.optimization.epochs):
@@ -145,9 +141,8 @@ class MnistGan(BaseModel):
                 d_error, g_error = self.train_batch(batch)
 
                 # Test noise
-                if n_batch % 500 == 0:
-                    # display.clear_output(True)
-                    self.test_eval((epoch, n_batch), test_noise_random, test_noise_interpolated)
+                if n_batch % FLAGS.training.log_interval == 0:
+                    self.test_eval(test_noise_random, test_noise_interpolated)
                     print(
                         "Epoch: {}, Batch: {}, D_Loss: {}, G_Loss: {}".format(epoch, n_batch, d_error, g_error),
                         flush=True)

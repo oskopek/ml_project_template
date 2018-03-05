@@ -34,23 +34,32 @@ To run Tensorboard in the notebook server, go to the specified log directory, an
 
 Hint: Only do this once, in the `data_out/` folder.
 
-If you are on Colab, add the following *TWO* cells to your notebook, ideally in a "section":
+If you are on Colab, add the following cell to your notebook, ideally in a "section":
 
 ```
-!git clone https://github.com/mixuala/colab_utils.git
-```
-
-```
+COLAB = True
 import os
-import colab_utils.tboard
 
-# set paths
-ROOT = %pwd
-LOG_DIR = os.path.join(ROOT, 'log')
+if COLAB:
+    import resources.colab_utils.tboard as tboard
 
-# will install `ngrok`, if necessary
-# will create `log_dir` if path does not exist
-colab_utils.tboard.launch_tensorboard(bin_dir=ROOT, log_dir=LOG_DIR)
+    %cd /content
+    ROOT_DIR = '/content'
+    REPO_DIR = os.path.join(ROOT_DIR, 'ml_project_template')
+    LOG_DIR = os.path.join(REPO_DIR, 'data_out')
+
+    if not os.path.isdir(REPO_DIR):
+      !git clone https://github.com/oskopek/ml_project_template.git
+    if not os.path.isdir(LOG_DIR):
+      os.makedirs(LOG_DIR)
+    %cd 'ml_project_template'
+    %ls
+
+    # will install `ngrok`, if necessary
+    # will create `log_dir` if path does not exist
+    tboard.launch_tensorboard(bin_dir=ROOT, log_dir=LOG_DIR)
+else:
+    %pwd
 ```
 
 A URL will be in the output, use that to connect to Tensorboard in your browser. The URL should only work from your machine (localhost).
@@ -64,9 +73,12 @@ extensions (press Ctrl+Shift+L). All other Python files will get autoformatted b
 
 * `data_in/` -- input data and associated scripts/configs
 * `data_out/` -- output data and logs + associated scripts/configs
+* `docker/` -- setup and configs for running stuff inside and outside of Docker
 * `features/` -- feature preprocessing and normalization Python code + configs
-* `models/` -- notebooks/scripts defining the models + hyperparameters
-* `notebooks/` -- data exploration and other misc. notebooks
+* `flags/` -- command line flags, model parameters, etc.
+* `models/` -- scripts defining the models + hyperparameters
+* `notebooks/` -- data exploration and other rapid development notebooks
+** Models from here should eventually be promoted into `models/`
 * `resources/` -- Python utilities
 * `setup/` -- environemnt setup and verification scripts in Python/Bash
 * `venv/` -- the (local) Python virtual environemnt
