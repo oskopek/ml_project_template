@@ -9,4 +9,5 @@ then
 fi
 
 nbstripout notebooks/*.ipynb
-yapf -r -i features/ models/ notebooks/ resources/ setup/ -e resources/colab_utils/
+python setup/yapf_nbformat.py notebooks/*.ipynb
+yapf -r -i . -e resources/colab_utils/ -e venv/
