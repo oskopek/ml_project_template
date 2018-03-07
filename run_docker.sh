@@ -11,6 +11,6 @@ fi
 
 set -- "${@:2}"
 
-cmd="sudo docker run $img -d -e PASSWORD=$pass -p 8888:8888 -p 6006:6006 -- $@"
+cmd="sudo docker run -it -e PASSWORD=$pass -p 8888:8888 -p 6006:6006 $img -- $@"
 echo "Running: $cmd"
 eval "$cmd"

@@ -9,9 +9,11 @@ set -- $args
 
 arg="$1"
 if [ -z "$arg" ]; then
-    echo 'No run config passed. Can either be a run config file, "jupyter", or "notebook"'
+    echo 'No run config passed. Can either be "model", "jupyter", or "notebook"'
     exit 1
 fi
+
+set -- ${@:2}
 
 # Activate virtual env
 source venv/bin/activate
@@ -24,13 +26,18 @@ fi
 
 # Run jupyter notebooks
 if [ "$arg" == 'jupyter' ]; then
-    exec jupyter notebook --allow-root
+    exec jupyter notebook --allow-root $@
 fi
 
 if [ "$arg" == 'notebook' ]; then
     exec jupyter nbconvert --to notebook --stdout --execute $@
 fi
 
-# Run a specific configuration + TensorBoard
-tensorboard --logdir data_out >/dev/null & # Run tensorboard in the background
-exec python -m docker.run_config $@ # Pass arg and all successive arguments
+if [ "$arg" == 'model' ]; then
+    # Run a specific configuration + TensorBoard
+    tensorboard --logdir data_out >/dev/null & # Run tensorboard in the background
+    exec python -m docker.run_config $@ # Pass arg and all successive arguments
+fi
+
+echo "Run config $arg unknown!"' Can either be "model", "jupyter", or "notebook"'
+exit 1
