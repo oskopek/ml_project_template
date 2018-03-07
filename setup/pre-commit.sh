@@ -1,12 +1,18 @@
 #!/bin/bash
 
 function scripttest {
-    echo -e "\nPython cleaning test..."
+    echo -ne "\nPython cleaning test... "
     stagedfiles=$(git diff --cached --name-only | grep '.py$')
-    [ -z "$stagedfiles" ] && return 0
+    if [ -z "$stagedfiles" ]; then
+        echo -e "PASSED"
+        return 0
+    fi
 
     unformatted=$(yapf --diff $stagedfiles | grep "(reformatted)" | awk '{print $2}')
-    [ -z "$unformatted" ] && return 0
+    if [ -z "$unformatted" ]; then
+        echo -e "PASSED"
+        return 0
+    fi
 
     echo "The following files are not formatted properly:"
     for fn in $unformatted; do
@@ -19,12 +25,18 @@ function scripttest {
 }
 
 function notebooktest {
-    echo -e "\nNotebook cleaning test..."
+    echo -ne "\nNotebook cleaning test... "
     stagedfiles=$(git diff --cached --name-only | grep '.ipynb$')
-    [ -z "$stagedfiles" ] && return 0
+    if [ -z "$stagedfiles" ]; then
+        echo -e "PASSED"
+        return 0
+    fi
 
     unformatted=$(python setup/yapf_nbformat.py --dry_run $stagedfiles | grep "(reformatted)" | awk '{print $2}')
-    [ -z "$unformatted" ] && return 0
+    if [ -z "$unformatted" ]; then
+        echo -e "PASSED"
+        return 0
+    fi
 
     echo "The following files are not formatted properly:"
     for fn in $unformatted; do
@@ -39,7 +51,7 @@ function notebooktest {
 # Redirect output to stderr.
 exec 1>&2
 
-echo "Running pre-commit hook..."
+echo "Running pre-commit hooks..."
 
 ./setup/tests.sh
 RESULT=$?
