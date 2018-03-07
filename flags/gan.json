@@ -7,6 +7,7 @@
         "checkpoint_dir": "checkpoints", // Directory in data/out_dir/$MODEL_RUN where to write checkpoints.
         "no_gpu": false, // Disables GPU usage even if a GPU is available
         "log_interval": 500, // How many steps to wait before logging training statistics.
+        "save_interval": 1, // How many epochs to wait before saving model checkpoint.
         "threads": 8, // How many CPU threads should training use (max)
         "seed": 42 // Random seed
     },
