@@ -16,7 +16,7 @@ fi
 # Activate virtual env
 source venv/bin/activate
 
-if [ -z "$VIRTUAL_ENV" ]
+if ./setup/check_venv.sh
 then
     echo "Not in venv, please activate it first."
     exit 1
