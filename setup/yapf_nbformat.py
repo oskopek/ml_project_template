@@ -22,12 +22,6 @@ def format_nb(notebook_filename, dry_run=False):
             continue
 
         formatted_src, did_change = FormatCode(src, style_config=style_file)
-        if formatted_src.endswith('\n'):
-            formatted_src = formatted_src[:-1]  # remove last newline
-            did_change = True
-        if did_change:
-            cell['source'] = formatted_src
-            changed = True
 
     if changed:
         if dry_run:
