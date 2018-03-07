@@ -1,4 +1,4 @@
-= ml-project-template
+= ml_project_template
 
 A template for ML projects striking a balance between reproducibility and rapid iteration.
 
@@ -8,66 +8,117 @@ A template for ML projects striking a balance between reproducibility and rapid 
 * Git
 * Tensorflow 1.5
 
-*Important:* When commiting, remember to be *in* the virtual environment, for hooks to work.
+*Important:* When commiting, remember to be *in* the virtual environment,
+for hooks to work.
 
-Note: Collab still runs on different versions of everything, but this should be a good approximation (2018/02/27).
+**Note**: Collab still runs on different versions of everything,
+but this should be a good approximation (2018/02/27).
 
 == Setup
 
-Make sure there is no `venv/` directory in your repo. If there is, remove it.
+Make sure there is no `venv/` directory in your repository. If there is, remove it.
 Run the following commands:
 ```
 ./setup/create_venv.sh
 source venv/bin/activate
-./setup/setup_venv.sh
 ```
 
-*Important:* For all commands here, we assume you are source into the virtual environment: `source venv/bin/activate`
+*Important:* For all commands here, we assume you are source into
+the virtual environment: `source venv/bin/activate`
 
-== Starting the notebook server
+== Workflow
 
-Run: `jupyter notebook .` in the project root directory.
+This template is to be used for machine learning research projects.
+As such, we assume most development will happen in a Jupyter notebook
+on https://colab.research.google.com/[Colab]. These should be periodically
+downloaded and committed into the `notebooks/` folder.
 
-=== Tensorboard
+Once they are ready and stable enough, they should be converted into a Python
+script, modularized, and moved into the `models/`, `features/`, `resources/`, and
+`flags/` folder, respectively.
 
-To run Tensorboard in the notebook server, go to the specified log directory, and select New > Tensorboard. A pop-up window will open (make sure to enable those in your browser).
+The following sections describe the ways you can work with this template.
 
-Hint: Only do this once, in the `data_out/` folder.
+=== Jupyter notebooks
+
+Work on Colab, save notebooks in the `notebooks/` directory.
+These can also be worked on locally using Jupyter:
+
+* Run `jupyter notebook` in the project root directory.
+* Run `jupyter lab` in the project root directory.
+
+To run Tensorboard locally alongside these, just run it with `--logdir data_out/`.
+
+==== Tensorboard
+
+To run Tensorboard in the notebook server directly, go to the specified log directory,
+and select New > Tensorboard.
+A pop-up window will open (make sure to enable those in your browser).
+
+*Note:* Only do this once, in the `data_out/` folder.
 
 If you are on Colab, add the following cell to your notebook, ideally in a "section":
 
 ```
-COLAB = True
+# noqa
 import os
-
 if COLAB:
-    import resources.colab_utils.tboard as tboard
-
     %cd /content
     ROOT_DIR = '/content'
     REPO_DIR = os.path.join(ROOT_DIR, 'ml_project_template')
     LOG_DIR = os.path.join(REPO_DIR, 'data_out')
 
     if not os.path.isdir(REPO_DIR):
-      !git clone https://github.com/oskopek/ml_project_template.git
+        !git clone https://github.com/oskopek/ml_project_template.git
     if not os.path.isdir(LOG_DIR):
-      os.makedirs(LOG_DIR)
+        os.makedirs(LOG_DIR)
     %cd 'ml_project_template'
     %ls
 
+    import resources.colab_utils.tboard as tboard
     # will install `ngrok`, if necessary
     # will create `log_dir` if path does not exist
-    tboard.launch_tensorboard(bin_dir=ROOT, log_dir=LOG_DIR)
+    tboard.launch_tensorboard(bin_dir=REPO_DIR, log_dir=LOG_DIR)
 else:
-    %pwd
+    wd = %pwd
+    print('Current directory:', wd)
+    if wd.endswith('notebooks'):
+        %cd ..
 ```
 
-A URL will be in the output, use that to connect to Tensorboard in your browser. The URL should only work from your machine (localhost).
+A URL will be in the output, use that to connect to Tensorboard in your browser.
+The URL should only work from your machine (localhost).
 
-== Formatting
+=== Docker / Custom runner
 
-Unfortunately, there is no sane way to autoformat notebooks. Please do that manually, in the notebook, using the code_prettify
-extensions (press Ctrl+Shift+L). All other Python files will get autoformatted by YAPF.
+After you have build a Docker image using:
+`make build-cpu` or `make build-gpu` (or pulling one from the remote Docker hub),
+you can use the Docker wrapper:
+
+* Jupyter on Docker: `./run_docker.sh PASSWORD jupyter`.
+** To execute a specific notebook and print its output to stdout, use: `./run_docker.sh PASSWORD notebook NOTEBOOK_FILE`
+*** Do note that `NOTEBOOK_FILE` is a path relative to the repository root and must also be present in the image!
+** For both of these commands, `PASSWORD` is the password you want to set for the Jupyter web interface.
+* Python models on Docker: `./run_docker.sh MODEL_MODULE FLAG_FILE`
+** For example: `./run_docker.sh models.mnist_gan_graph flags/gan.json`
+** Do note that `MODEL_MODULE` and `FLAG_FILE` are paths relative to the repository root and must also be present in the image!
+** This will automatically run Tensorboard on http://localhost:6006/
+
+Without the wrapper:
+```
+docker run IMG jupyter # runs Jupyter without a password
+docker run IMG notebook notebooks/test.ipynb # Runs the notebook
+docker run IMG models.mnist_gan_graph flags/gan.json # Runs the MNIST GAN graph model with flags from the specified file
+```
+
+==== Using the run script without Docker
+
+You can also use the above commands without using Docker, by invoking the run script directly:
+```
+./docker/run.sh jupyter # runs Jupyter
+./docker/run.sh notebook notebooks/test.ipynb # Runs the notebook
+./docker/run.sh models.mnist_gan_graph flags/gan.json # Runs the MNIST GAN graph model with flags from the specified file
+```
 
 == Directory structure
 
@@ -80,15 +131,10 @@ extensions (press Ctrl+Shift+L). All other Python files will get autoformatted b
 * `notebooks/` -- data exploration and other rapid development notebooks
 ** Models from here should eventually be promoted into `models/`
 * `resources/` -- Python utilities
-* `setup/` -- environemnt setup and verification scripts in Python/Bash
-* `venv/` -- the (local) Python virtual environemnt
+* `setup/` -- environment setup and verification scripts in Python/Bash
+* `venv/` -- the (local) Python virtual environment
 
-== Running
+== Formatting
 
-Try it out:
-```
-docker run IMG bash # opens a shell
-docker run IMG jupyter # runs Jupyter
-docker run IMG notebook notebooks/test.ipynb # Runs the notebook
-docker run IMG models/mnist_gan_graph.py flags/gan.json # Runs the mnist gan graph model with flags from the specified file
-```
+Run: `./setup/clean.sh`.
+A Git hook will tell you if any files are misformatted before committing.
