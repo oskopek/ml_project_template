@@ -3,7 +3,7 @@ import tensorflow.contrib.summary as tf_summary
 
 from models.base import BaseModel
 from resources.data_utils import next_batch, read_mnist
-from resource.model_utils import noise, tile_images
+from resources.model_utils import noise, tile_images
 
 # Flags
 from flags import flags_parser
@@ -96,7 +96,7 @@ class MnistGan(BaseModel):
 
         # Optimizers
         t_vars = tf.trainable_variables()
-        LEARNING_RATE = FLAGS.training.model.optimization.learning_rate
+        LEARNING_RATE = FLAGS.model.optimization.learning_rate
         self.d_opt = tf.train.AdamOptimizer(LEARNING_RATE).minimize(
             self.d_loss, var_list=[var for var in t_vars if 'Discriminator' in var.name], global_step=self.d_step)
         self.g_opt = tf.train.AdamOptimizer(LEARNING_RATE).minimize(
@@ -131,8 +131,8 @@ class MnistGan(BaseModel):
         BATCH_SIZE = FLAGS.model.optimization.batch_size
         train_X, train_Y = read_mnist(FLAGS.data.in_dir, no_gpu=FLAGS.training.no_gpu)
 
-        test_noise_random = noise(size=(FLAGS.eva.num_test_samples, self.NOISE_SIZE), dist='uniform')
-        test_noise_interpolated = noise(size=(FLAGS.eva.num_test_samples, self.NOISE_SIZE), dist='linspace')
+        test_noise_random = noise(size=(FLAGS.eval.num_test_samples, self.NOISE_SIZE), dist='uniform')
+        test_noise_interpolated = noise(size=(FLAGS.eval.num_test_samples, self.NOISE_SIZE), dist='linspace')
 
         # Iterate through epochs
         for epoch in range(FLAGS.model.optimization.epochs):
