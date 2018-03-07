@@ -22,14 +22,15 @@ def format_nb(notebook_filename, dry_run=False):
             continue
 
         formatted_src, did_change = FormatCode(src, style_config=style_file)
+        if did_change:
+            cell['source'] = formatted_src
+            changed = True
 
     if changed:
-        if dry_run:
-            print(' (reformatted)')
-        else:
+        if not dry_run:
             with open(notebook_filename, 'w') as f:
                 nbformat.write(notebook, f, version=nbformat.NO_CONVERT)
-            print()
+        print(' (reformatted)')
     else:
         print()
 
