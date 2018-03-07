@@ -42,10 +42,11 @@ The following sections describe the ways you can work with this template.
 === Jupyter notebooks
 
 Work on Colab, save notebooks in the `notebooks/` directory.
-These can also be worked on locally using Jupyter:
+These can also be worked on locally using Jupyter.
+In the project root directory, you can run either:
 
-* Run `jupyter notebook` in the project root directory.
-* Run `jupyter lab` in the project root directory.
+* `jupyter notebook`,
+* or `jupyter lab`.
 
 To run Tensorboard locally alongside these, just run it with `--logdir data_out/`.
 
@@ -99,25 +100,31 @@ you can use the Docker wrapper:
 ** To execute a specific notebook and print its output to stdout, use: `./run_docker.sh PASSWORD notebook NOTEBOOK_FILE`
 *** Do note that `NOTEBOOK_FILE` is a path relative to the repository root and must also be present in the image!
 ** For both of these commands, `PASSWORD` is the password you want to set for the Jupyter web interface.
-* Python models on Docker: `./run_docker.sh MODEL_MODULE FLAG_FILE`
-** For example: `./run_docker.sh models.mnist_gan_graph flags/gan.json`
+** You can access it at http://localhost:8888/.
+** Same applies to `./run_docker.sh PASSWORD lab`.
+* Python models on Docker: `./run_docker.sh model MODEL_MODULE FLAG_FILE`
+** For example: `./run_docker.sh model models.mnist_gan_graph flags/gan.json`
 ** Do note that `MODEL_MODULE` and `FLAG_FILE` are paths relative to the repository root and must also be present in the image!
 ** This will automatically run Tensorboard on http://localhost:6006/
 
 Without the wrapper:
+
 ```
-docker run IMG jupyter # runs Jupyter without a password
+docker run IMG jupyter # runs Jupyter
+docker run IMG lab # runs JupyterLab
 docker run IMG notebook notebooks/test.ipynb # Runs the notebook
-docker run IMG models.mnist_gan_graph flags/gan.json # Runs the MNIST GAN graph model with flags from the specified file
+docker run IMG model models.mnist_gan_graph flags/gan.json # Runs the MNIST GAN graph model with flags from the specified file
 ```
 
 ==== Using the run script without Docker
 
 You can also use the above commands without using Docker, by invoking the run script directly:
+
 ```
 ./docker/run.sh jupyter # runs Jupyter
+./docker/run.sh lab # runs JupyterLab
 ./docker/run.sh notebook notebooks/test.ipynb # Runs the notebook
-./docker/run.sh models.mnist_gan_graph flags/gan.json # Runs the MNIST GAN graph model with flags from the specified file
+./docker/run.sh model models.mnist_gan_graph flags/gan.json # Runs the MNIST GAN graph model with flags from the specified file
 ```
 
 == Directory structure
