@@ -34,7 +34,7 @@ class BaseModel:
         with self.session.graph.as_default():
             self.global_step = tf.Variable(0, dtype=tf.int64, trainable=False, name="global_step")
             self.is_training = tf.placeholder_with_default(False, [])
-            
+
             timestamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
             self.logdir = "{}/{}-{}".format(logdir_name, expname, timestamp)
             self.saver = tf.train.Saver(max_to_keep=1)
@@ -66,11 +66,19 @@ class KerasModel(object):
 
         timestamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
         self.logdir = "{}/{}-{}".format(logdir_name, expname, timestamp)
-        tensorboard = keras.callbacks.TensorBoard(log_dir=self.logdir, histogram_freq=1, write_graph=True, write_images=True)
+        tensorboard = keras.callbacks.TensorBoard(
+            log_dir=self.logdir, histogram_freq=1, write_graph=True, write_images=True)
         self.callbacks.append(tensorboard)
-        
+
         self.save_path = os.path.join(self.logdir, checkpoint_dirname)
         if not os.path.exists(self.save_path):
             os.makedirs(self.save_path)
-        checkpoints = keras.callbacks.ModelCheckpoint(os.path.join(self.save_path, "model.hdf5"), monitor='val_loss', verbose=0, save_best_only=True, save_weights_only=False, mode='auto', period=1)
+        checkpoints = keras.callbacks.ModelCheckpoint(
+            os.path.join(self.save_path, "model.hdf5"),
+            monitor='val_loss',
+            verbose=1,
+            save_best_only=True,
+            save_weights_only=False,
+            mode='auto',
+            period=1)
         self.callbacks.append(checkpoints)
