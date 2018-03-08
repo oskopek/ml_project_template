@@ -80,7 +80,14 @@ def upload_notebook(service, f, folder_id):
     print("    File ID: {}".format(file.get("id")))
 
 
-def main(notebook_folder, folder_id):
+def upload_all_notebooks(service, folder_id, notebook_folder):
+    for f in os.listdir(notebook_folder):
+        f = os.path.join(notebook_folder, f)
+        if os.path.isfile(f) and f.endswith(".ipynb"):
+            upload_notebook(service, f, folder_id)
+
+
+def main(folder_id, notebook_folder):
     if DEBUG:
         print("Notebook folder:", os.listdir(notebook_folder))
     credentials = get_credentials()
@@ -91,24 +98,18 @@ def main(notebook_folder, folder_id):
     delete_all_in_folder(service, folder_id)
 
     print("Uploading new notebook versions...")
-    for f in os.listdir(notebook_folder):
-        f = os.path.join(notebook_folder, f)
-        if os.path.isfile(f) and f.endswith(".ipynb"):
-            upload_notebook(service, f, folder_id)
+    upload_all_notebooks(service, folder_id, notebook_folder)
 
 
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument("notebookFolder")
-    parser.add_argument("folderId")
-    parser.add_argument("clientSecret")
+    parser.add_argument("notebook_folder")
+    parser.add_argument("folder_id")
+    parser.add_argument("client_secret")
     args = parser.parse_args()
 
     global CLIENT_SECRET_FILE
-    if args.clientSecret is not None:
-        CLIENT_SECRET_FILE = args.clientSecret
-    else:
-        CLIENT_SECRET_FILE = "client_secret.json"
+    CLIENT_SECRET_FILE = args.client_secret
 
-    main(args.notebookFolder, args.folderId)
+    main(args.folder_id, args.notebook_folder)
