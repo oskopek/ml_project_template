@@ -2,14 +2,14 @@ image: tensorflow/tensorflow:1.5.0-py3
 
 before_script:
   - apt-get update
-  - apt-get install -y git make docker
+  - apt-get install -y git make #docker
   - ./setup/create_venv.sh
   - source venv/bin/activate
 
 stages:
   - clean
   - test
-  - container
+#  - container
 
 clean-job:
   stage: clean
@@ -19,17 +19,17 @@ clean-job:
 test-job:
   stage: test
   dependencies:
-    - build-job
+    - clean-job
   script:
     - "./setup/tests.sh"
 
-container-job:
-  stage: container
-  dependencies:
-    - build-job
-    - test-job
-  script:
-     - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.example.com
-     - make build-cpu
-     - make build-gpu
-     - make push
+# container-job:
+#   stage: container
+#   dependencies:
+#     - clean-job
+#     - test-job
+#   script:
+#      - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.example.com
+#      - make build-cpu
+#      - make build-gpu
+#      - make push

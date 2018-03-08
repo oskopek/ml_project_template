@@ -12,8 +12,10 @@ source "$venv"/bin/activate
 pip install -r "requirements.txt"
 
 # Install the pre-commit hook
-rm -f .git/hooks/pre-commit
-ln -s ../../setup/pre-commit.sh .git/hooks/pre-commit
+if [ -z "$CI" ]; then
+    rm -f .git/hooks/pre-commit
+    ln -s ../../setup/pre-commit.sh .git/hooks/pre-commit
+fi
 
 # Install jupyter_tensorboard
 pip install jupyter_tensorboard==0.1.5
