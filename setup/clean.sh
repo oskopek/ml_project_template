@@ -10,4 +10,4 @@ fi
 
 nbstripout notebooks/*.ipynb
 python setup/yapf_nbformat.py notebooks/*.ipynb
-yapf -r -i . -e resources/colab_utils/ -e venv/
+yapf -r -i -e "resources/colab_utils/**" -e "venv/**" .
