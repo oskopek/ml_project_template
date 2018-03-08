@@ -11,7 +11,7 @@ A template for ML projects striking a balance between reproducibility and rapid 
 *Important:* When commiting, remember to be *in* the virtual environment,
 for hooks to work.
 
-**Note**: Collab still runs on different versions of everything,
+**Note**: Colab still runs on different versions of everything,
 but this should be a good approximation (2018/02/27).
 
 == Setup
@@ -33,7 +33,21 @@ As such, we assume most development will happen in a Jupyter notebook
 on https://colab.research.google.com/[Colab]. These should be periodically
 downloaded and committed into the `notebooks/` folder.
 
-Once they are ready and stable enough, they should be converted into a Python
+To upload them to Colab automatically, follow the instructions in
+
+```
+resources/google_drive_upload/README.adoc
+```
+and then run
+```
+./resources/google_drive_upload/refresh.sh
+```
+
+*WARNING*: This deletes the remote (GDrive) versions of the notebooks from GDrive!
+
+*TODO*: Create a notebook "download and commit" script in addition to this. (https://github.com/oskopek/ml_project_template/issues/17)
+
+Once the notebooks are ready and stable enough, they should be converted into a Python
 script, modularized, and moved into the `models/`, `features/`, `resources/`, and
 `flags/` folder, respectively.
 

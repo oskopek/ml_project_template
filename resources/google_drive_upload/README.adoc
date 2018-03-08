@@ -1,0 +1,11 @@
+= Google Drive Notebook Replacement Script
+
+To initialize for your folder and user account, create a file called `folderId.txt` with the contents being one line
+that contains the id of your folder on Google Drive. The id is the last part of the URL when you open that folder
+in Google Drive in your browser (the weird hash-like string).
+
+Also authenticate your application for access to user data at the link: https://console.developers.google.com/start/api?id=drive
+Download the json file and place it in this directory, in a file called `client_secret.json`.
+
+Both of these files are Git-ignored on purpose, *do not commit them*!
+
