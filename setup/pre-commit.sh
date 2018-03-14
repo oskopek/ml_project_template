@@ -9,6 +9,11 @@ function scripttest {
     fi
 
     unformatted=$(yapf --diff $stagedfiles | grep "(reformatted)" | awk '{print $2}')
+    failed=$?
+    if [ -n "$failed" ]; then
+        echo -e "FAILED -- CRASHED"
+        return 1
+    fi
     if [ -z "$unformatted" ]; then
         echo -e "PASSED"
         return 0
@@ -33,6 +38,11 @@ function notebooktest {
     fi
 
     unformatted=$(python setup/yapf_nbformat.py --dry_run $stagedfiles | grep "(reformatted)" | awk '{print $2}')
+    failed=$?
+    if [ -n "$failed" ]; then
+        echo -e "FAILED -- CRASHED"
+        return 1
+    fi
     if [ -z "$unformatted" ]; then
         echo -e "PASSED"
         return 0
