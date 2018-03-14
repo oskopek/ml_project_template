@@ -5,7 +5,9 @@ def next_batch(arr, batch_size):
     num_batches = int(len(arr) / batch_size)
     for i in range(0, num_batches * batch_size, batch_size):
         yield arr[i:i + batch_size]
-    yield arr[num_batches * batch_size:]
+    # Yield the remainder of the batch.
+    if num_batches * batch_size != len(arr):
+        yield arr[num_batches * batch_size:]
 
 
 def shuffle(a, b):
